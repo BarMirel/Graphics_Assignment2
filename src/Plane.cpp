@@ -36,3 +36,27 @@ bool Plane::intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
 glm::vec3 Plane::getNormal(const glm::vec3& point) const {
     return glm::normalize(glm::vec3(a, b, c));
 }
+
+glm::vec3 Plane::getColor(const glm::vec3& hitPoint) const{
+    // Checkerboard pattern
+    float scaleParameter = 0.5f;
+    float checkerboard = 0;
+    if (hitPoint.x < 0) {
+        checkerboard += floor((0.5 - hitPoint.x) / scaleParameter);
+    }
+    else {
+        checkerboard += floor(hitPoint.x / scaleParameter);
+    }
+    if (hitPoint.y < 0) {
+        checkerboard += floor((0.5 - hitPoint.y) / scaleParameter);
+    }
+    else {
+        checkerboard += floor(hitPoint.y / scaleParameter);
+    }
+        checkerboard = (checkerboard * 0.5) - int(checkerboard * 0.5);
+        checkerboard *= 2;
+    if (checkerboard > 0.5) {
+        return 0.5f * color;
+    }
+        return color;
+ }
