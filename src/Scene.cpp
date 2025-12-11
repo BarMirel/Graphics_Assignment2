@@ -42,8 +42,10 @@ bool Scene::parseLine(const std::string& line) {
         iss >> cameraPosition.x >> cameraPosition.y >> cameraPosition.z >> distanceToScreen;
     } else if (token == "u") { // up vector
         iss >> upVector.x >> upVector.y >> upVector.z >> screenHeight;
+        upVector = glm::normalize(upVector);
     } else if (token == "f") { // forward vector
         iss >> forwardVector.x >> forwardVector.y >> forwardVector.z >> screenWidth;
+        forwardVector = glm::normalize(forwardVector);
     } else if (token == "a") { // ambient intensity
         iss >> ambientIntensity.r >> ambientIntensity.g >> ambientIntensity.b;
         float dummy;
@@ -149,7 +151,6 @@ void Scene::printSceneInfo() const {
             const Plane* plane = dynamic_cast<const Plane*>(obj.get());
             std::cout << "Plane with coefficients (" << plane->getA() << ", " << plane->getB() << ", " << plane->getC() << ", " << plane->getD() << ")";
         }
-        std::cout << ", Color: (" << obj->getColor().r << ", " << obj->getColor().g << ", " << obj->getColor().b << ")" << std::endl;
     }
 
     std::cout << "Lights:" << std::endl;
@@ -165,6 +166,39 @@ void Scene::printSceneInfo() const {
                       << ") with direction (" << spotLight->getDirection().x << ", " << spotLight->getDirection().y << ", " << spotLight->getDirection().z << ")";
         }
         std::cout << ", Intensity: (" << light->getIntensity().r << ", " << light->getIntensity().g << ", " << light->getIntensity().b << ")" << std::endl;
+    }
+}
+
+void Scene::generateImage(int width, int height, unsigned char* buffer) {
+    glm::vec3 rightVector = glm::normalize(glm::cross(forwardVector, upVector));
+    glm::vec3 screenCenter = cameraPosition + distanceToScreen * forwardVector;
+    // Half dimensions for centering
+    float halfWidth = screenWidth / 2.0f;
+    float halfHeight = screenHeight / 2.0f;
+    for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < width; ++i) {
+            // Normalized coordinates from 0 to width/heigth - 1 to -half to +half
+            float u = (2.0f * (i + 0.5f) / width - 1.0f) * halfWidth;
+            float v = (2.0f * (j + 0.5f) / height - 1.0f) * halfHeight;
+            glm::vec3 pixelPosition = screenCenter + u * rightVector + v * upVector;
+            glm::vec3 direction = glm::normalize(pixelPosition - cameraPosition);
+            // Find closest intersection
+            float minT = std::numeric_limits<float>::max();
+            glm::vec3 pixelColor = glm::vec3(0.0f); // Default to black
+            for (const auto& obj : objects) {
+                float t;
+                if (obj->intersect(cameraPosition, direction, t) && t > 0.0f && t < minT) {
+                    minT = t;
+                    glm::vec3 hitPoint = cameraPosition + t * direction;
+                    pixelColor = obj->getColor(hitPoint);
+                }
+            }
+            int index = ((width -1 -j) * width + i) * 4; //To go from down to up cord to up to down cord the image uses
+            buffer[index] = static_cast<unsigned char>(pixelColor.r * 255.0f);
+            buffer[index + 1] = static_cast<unsigned char>(pixelColor.g * 255.0f);
+            buffer[index + 2] = static_cast<unsigned char>(pixelColor.b * 255.0f);
+            buffer[index + 3] = 255;
+        }
     }
 }
 

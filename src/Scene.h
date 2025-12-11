@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+class Ray;
 class Object;
 class Light;
 
@@ -54,6 +55,9 @@ public:
 
     // Scene information
     void printSceneInfo() const;
+
+    // Image generation
+    void generateImage(int width, int height, unsigned char* buffer);
 
     // Getters
     glm::vec3 getCameraPosition() const;
