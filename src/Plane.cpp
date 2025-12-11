@@ -37,7 +37,7 @@ glm::vec3 Plane::getNormal(const glm::vec3& point) const {
     return glm::normalize(glm::vec3(a, b, c));
 }
 
-glm::vec3 Plane::getColor(const glm::vec3& hitPoint) const{
+glm::vec3 Plane::getColor(const glm::vec3 hitPoint) const{
     // Checkerboard pattern
     float scaleParameter = 0.5f;
     float checkerboard = 0;

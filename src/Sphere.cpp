@@ -39,6 +39,10 @@ bool Sphere::intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection
     return false;
 }
 
+glm::vec3 Sphere::getColor(const glm::vec3 hitPoint) const {
+    return color;
+}
+
 glm::vec3 Sphere::getNormal(const glm::vec3& point) const {
     return glm::normalize(point - center);
 }

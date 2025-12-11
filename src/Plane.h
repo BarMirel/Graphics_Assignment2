@@ -17,8 +17,8 @@ public:
     float getD() const;
 
     bool intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& t) const override;
+    glm::vec3 getColor(const glm::vec3 hitPoint) const override;
     glm::vec3 getNormal(const glm::vec3& point) const override;
-    glm::vec3 getColor(const glm::vec3& hitPoint) const;
 };
 
 #endif // PLANE_H

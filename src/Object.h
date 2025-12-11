@@ -27,11 +27,10 @@ public:
 
     ObjectType getType() const;
     MaterialType getMaterialType() const;
-    glm::vec3 getColor() const;
     void setColor(const glm::vec3& c);
 
-    // Virtual methods for intersection calculations (to be implemented later)
     virtual bool intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& t) const = 0;
+    virtual glm::vec3 getColor(const glm::vec3 hitPoint) const = 0;
     virtual glm::vec3 getNormal(const glm::vec3& point) const = 0;
 };
 

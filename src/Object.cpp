@@ -11,10 +11,6 @@ MaterialType Object::getMaterialType() const {
     return materialType;
 }
 
-glm::vec3 Object::getColor() const {
-    return color;
-}
-
 void Object::setColor(const glm::vec3& c) {
     color = c;
 }
