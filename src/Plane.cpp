@@ -1,8 +1,8 @@
 #include "Plane.h"
 #include <glm/glm.hpp>
 
-Plane::Plane(float a, float b, float c, float d, MaterialType mt, const glm::vec3& color)
-    : Object(PLANE, mt, color), a(a), b(b), c(c), d(d) {}
+Plane::Plane(float a, float b, float c, float d, MaterialType mt, const glm::vec3& color, const float shininess)
+    : Object(PLANE, mt, color, shininess), a(a), b(b), c(c), d(d) {}
 
 float Plane::getA() const {
     return a;

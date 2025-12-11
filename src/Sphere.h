@@ -9,7 +9,7 @@ private:
     float radius;
 
 public:
-    Sphere(const glm::vec3& c, float r, MaterialType mt, const glm::vec3& color);
+    Sphere(const glm::vec3& c, float r, MaterialType mt, const glm::vec3& color, const float shininess);
     ~Sphere() override = default;
 
     glm::vec3 getCenter() const;

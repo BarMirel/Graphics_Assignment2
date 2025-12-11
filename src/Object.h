@@ -20,14 +20,17 @@ protected:
     ObjectType type;
     MaterialType materialType;
     glm::vec3 color; // Ambient and Diffuse Material color (r, g, b)
+    float shininess;
 
 public:
-    Object(ObjectType t, MaterialType mt, const glm::vec3& c);
+    Object(ObjectType t, MaterialType mt, const glm::vec3& c, const float s);
     virtual ~Object() = default;
 
     ObjectType getType() const;
     MaterialType getMaterialType() const;
     void setColor(const glm::vec3& c);
+    float getShininess() const;
+    void setShininess(const float s);
 
     virtual bool intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& t) const = 0;
     virtual glm::vec3 getColor(const glm::vec3 hitPoint) const = 0;

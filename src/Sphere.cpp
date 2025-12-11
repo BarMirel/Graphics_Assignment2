@@ -1,8 +1,8 @@
 #include "Sphere.h"
 #include <glm/glm.hpp>
 
-Sphere::Sphere(const glm::vec3& c, float r, MaterialType mt, const glm::vec3& color)
-    : Object(SPHERE, mt, color), center(c), radius(r) {}
+Sphere::Sphere(const glm::vec3& c, float r, MaterialType mt, const glm::vec3& color, const float shininess)
+    : Object(SPHERE, mt, color, shininess), center(c), radius(r) {}
 
 glm::vec3 Sphere::getCenter() const {
     return center;

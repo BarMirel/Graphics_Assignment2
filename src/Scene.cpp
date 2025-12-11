@@ -59,16 +59,16 @@ bool Scene::parseLine(const std::string& line) {
         iss >> x >> y >> z >> w;
 
         if (w > 0) { // sphere: w is radius
-            objects.push_back(std::make_unique<Sphere>(glm::vec3(x, y, z), w, materialType, glm::vec3(0.0f)));
+            objects.push_back(std::make_unique<Sphere>(glm::vec3(x, y, z), w, materialType, glm::vec3(0.0f), 0.0));
         } else { // plane: w is d coefficient
-            objects.push_back(std::make_unique<Plane>(x, y, z, w, materialType, glm::vec3(0.0f)));
+            objects.push_back(std::make_unique<Plane>(x, y, z, w, materialType, glm::vec3(0.0f), 0.0));
         }
     } else if (token == "c") { // color
         glm::vec3 color;
-        iss >> color.r >> color.g >> color.b;
-        float dummy;
-        iss >> dummy; // 4th coordinate (ignored)
+        float shininess;
+        iss >> color.r >> color.g >> color.b >> shininess;
         objectColors.push_back(color);
+        objectShininess.push_back(shininess);
     } else if (token == "d") { // directional light or spotlight direction
         glm::vec3 direction;
         iss >> direction.x >> direction.y >> direction.z;
@@ -97,6 +97,7 @@ void Scene::createObjects() {
     for (auto& obj : objects) {
         if (colorIndex < objectColors.size()) {
             obj->setColor(objectColors[colorIndex]);
+            obj->setShininess(objectShininess[colorIndex]);
             colorIndex++;
         }
     }
@@ -151,6 +152,7 @@ void Scene::printSceneInfo() const {
             const Plane* plane = dynamic_cast<const Plane*>(obj.get());
             std::cout << "Plane with coefficients (" << plane->getA() << ", " << plane->getB() << ", " << plane->getC() << ", " << plane->getD() << ")";
         }
+        std::cout << "Object Shinines: " << obj->getShininess() << std::endl;
     }
 
     std::cout << "Lights:" << std::endl;

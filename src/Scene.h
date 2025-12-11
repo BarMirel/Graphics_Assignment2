@@ -29,6 +29,7 @@ private:
 
     // Temporary storage for parsing
     std::vector<glm::vec3> objectColors;
+    std::vector<float> objectShininess;
     std::vector<glm::vec3> lightDirections;
     std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec3> lightIntensities;

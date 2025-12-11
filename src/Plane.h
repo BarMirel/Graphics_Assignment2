@@ -8,7 +8,7 @@ private:
     float a, b, c, d; // Plane equation: ax + by + cz + d = 0
 
 public:
-    Plane(float a, float b, float c, float d, MaterialType mt, const glm::vec3& color);
+    Plane(float a, float b, float c, float d, MaterialType mt, const glm::vec3& color, const float shininess);
     ~Plane() override = default;
 
     float getA() const;
