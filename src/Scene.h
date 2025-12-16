@@ -9,6 +9,7 @@
 class Ray;
 class Object;
 class Light;
+class IntersectionPoint;
 
 class Scene {
 private:
@@ -32,12 +33,16 @@ private:
     std::vector<float> objectShininess;
     std::vector<glm::vec3> lightDirections;
     std::vector<glm::vec3> lightPositions;
+    std::vector<float> lightCutoffCosines; 
     std::vector<glm::vec3> lightIntensities;
 
     // Private helper methods
     bool parseLine(const std::string& line);
     void createObjects();
     void createLights();
+    glm::vec3 calculatePhongLighting(const IntersectionPoint& intersection, const glm::vec3& viewDirection) const;
+    bool isInShadow(const glm::vec3& hitPoint, const glm::vec3& normal, const Light* light, const Object* hitObject) const;
+    glm::vec3 traceRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, int depth, const Object* excludeObject = nullptr) const;
 
 public:
     Scene();
