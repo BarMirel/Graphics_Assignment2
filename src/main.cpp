@@ -16,23 +16,52 @@
 #include <Scene.h>
 
 #include <iostream>
+#include <vector>
+#include <string>
 
 int main(int argc, char* argv[])
 {
-    Scene scene;
-
-    std::cout << "Loading scene1.txt..." << std::endl;
-    if (scene.loadFromFile("../scene1.txt")) {
-        int width = 1000;
-        int heigth = 1000;
-        int req_comp = 4;
-        std::cout << "Scene loaded successfully!" << std::endl;
-        scene.printSceneInfo();
-        unsigned char* buffer = new unsigned char[width * heigth * req_comp];
-        scene.generateImage(1000, 1000, buffer);
-        int result = stbi_write_png("res/textures/Test1.png", width, heigth, req_comp, buffer, width*req_comp);
-        std::cout << "Test1 result: " << result << std::endl;
-        delete[] buffer;
+    std::vector<std::string> sceneFiles = {
+        "scene1.txt",
+        "scene2.txt",
+        "scene21.txt",
+        "scene3.txt",
+        "scene4.txt",
+        "scene41.txt",
+        "scene5.txt",
+        "scene51.txt",
+        "scene6.txt"
+    };
+    
+    bool debug = false;
+    int width = 1000;
+    int height = 1000;
+    int req_comp = 4;
+    
+    for (const auto& sceneFile : sceneFiles) {
+        Scene scene;
+        if (scene.loadFromFile(sceneFile)) {
+            if(debug) scene.printSceneInfo();
+            
+            unsigned char* buffer = new unsigned char[width * height * req_comp];
+            scene.generateImage(width, height, buffer);
+            
+            std::string outputName = sceneFile;
+            size_t dotPos = outputName.find_last_of('.');
+            if (dotPos != std::string::npos) {
+                outputName = outputName.substr(0, dotPos);
+            }
+            
+            std::string outputPath = "bin/res/textures/" + outputName + ".png";
+            int result = stbi_write_png(outputPath.c_str(), width, height, req_comp, buffer, width * req_comp);
+            
+            
+            delete[] buffer;
+        } else {
+            std::cout << "Failed to load " << sceneFile << std::endl;
+        }
     }
+     std::cout << "All scenes processed" << std::endl;
+    
     return 0;
 }
