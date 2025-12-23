@@ -53,9 +53,7 @@ int main(int argc, char* argv[])
             }
             
             std::string outputPath = "bin/res/textures/" + outputName + ".png";
-            int result = stbi_write_png(outputPath.c_str(), width, height, req_comp, buffer, width * req_comp);
-            
-            
+            stbi_write_png(outputPath.c_str(), width, height, req_comp, buffer, width * req_comp);
             delete[] buffer;
         } else {
             std::cout << "Failed to load " << sceneFile << std::endl;
