@@ -38,7 +38,11 @@ glm::vec3 Plane::getNormal(const glm::vec3& point) const {
 }
 
 glm::vec3 Plane::getColor(const glm::vec3 hitPoint) const{
-    // Checkerboard pattern
+    return color;
+}
+
+glm::vec3 Plane::checkerboardColor(const glm::vec3 hitPoint) const {
+    // Checkerboard pattern - based on assignment code
     float scaleParameter = 0.5f;
     float checkerboard = 0;
     if (hitPoint.x < 0) {
@@ -53,10 +57,10 @@ glm::vec3 Plane::getColor(const glm::vec3 hitPoint) const{
     else {
         checkerboard += floor(hitPoint.y / scaleParameter);
     }
-        checkerboard = (checkerboard * 0.5) - int(checkerboard * 0.5);
-        checkerboard *= 2;
+    checkerboard = (checkerboard * 0.5) - int(checkerboard * 0.5);
+    checkerboard *= 2;
     if (checkerboard > 0.5) {
         return 0.5f * color;
     }
-        return color;
- }
+    return color;
+}
