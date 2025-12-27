@@ -39,6 +39,7 @@ struct HitInfo {
     vec3 hitPoint;
     vec3 normal;
     int type; // 0: diffuse, 1: reflective
+    int isPlane; // 1 if hit is plane, 0 if sphere
 };
 
 const int TYPE_DIFFUSE = 0;
@@ -92,40 +93,54 @@ vec3 checkerboardColor(vec3 rgbColor, vec3 hitPoint) {
 /* intersects scene. gets ray origin and direction, returns hit data*/
 HitInfo intersectScene(vec3 rayOrigin, vec3 rayDir) {
     HitInfo hit;
-    hit.t = -1.0;
-    // Check plane intersection
+
+    hit.rayOrigin = rayOrigin;
+    hit.rayDir    = rayDir;
+    hit.t         = 1e20;          // large value means no hit yet
+    hit.baseColor = vec3(0.0);
+    hit.inside    = 0;
+    hit.hitPoint  = vec3(0.0);
+    hit.normal    = vec3(0.0, 1.0, 0.0);
+    hit.type      = TYPE_DIFFUSE;
+    hit.isPlane   = 0;
+
+    // Plane intersection
     float denom = dot(rayDir, uPlane.normal);
-    if (abs(denom) > 0.0001) {
-        float t = dot((uPlane.point - rayOrigin), uPlane.normal) / denom;
-        if (t > 0.0) {
-            hit.t = t;
-            hit.hitPoint = rayOrigin + t * rayDir;
-            hit.normal = uPlane.normal;
+    if (abs(denom) > 1e-4) {
+        float tPlane = dot(uPlane.point - rayOrigin, uPlane.normal) / denom;
+        if (tPlane > 0.0 && tPlane < hit.t) {
+            hit.t        = tPlane;
+            hit.hitPoint = rayOrigin + tPlane * rayDir;
+            hit.normal   = normalize(uPlane.normal);
             hit.baseColor = checkerboardColor(uPlane.color, hit.hitPoint);
-            hit.type = TYPE_DIFFUSE;
-            hit.rayOrigin = rayOrigin;
-            hit.rayDir = rayDir;
-            hit.inside = 0;
+            hit.type      = TYPE_DIFFUSE; 
+            hit.isPlane   = 1;
         }
     }
-    // Check sphere intersections
-    for (int i = 0; i < uNumSpheres; i++) {
-        vec3 oc = rayOrigin - uSpheres[i].center;
-        float a = dot(rayDir, rayDir);
-        float b = 2.0 * dot(oc, rayDir);
-        float c = dot(oc, oc) - uSpheres[i].radius * uSpheres[i].radius;
-        float discriminant = b * b - 4.0 * a * c;
-        if (discriminant > 0.0) {
-            float t = (-b - sqrt(discriminant)) / (2.0 * a);
-            if (t > 0.0 && (hit.t < 0.0 || t < hit.t)) {
-                hit.t = t;
-                hit.hitPoint = rayOrigin + t * rayDir;
-                hit.normal = normalize(hit.hitPoint - uSpheres[i].center);
+
+    // Sphere intersections
+    for (int i = 0; i < uNumSpheres; ++i) {
+        vec3  oc = rayOrigin - uSpheres[i].center;
+        float a  = dot(rayDir, rayDir);
+        float b  = 2.0 * dot(oc, rayDir);
+        float c  = dot(oc, oc) - uSpheres[i].radius * uSpheres[i].radius;
+        float det = b * b - 4.0 * a * c;
+
+        if (det > 0.0) {
+            float sDet = sqrt(det);
+            float t1 = (-b - sDet) / (2.0 * a);
+            float t2 = (-b + sDet) / (2.0 * a);
+
+            float tSphere = t1;
+            if (tSphere < 0.0) tSphere = t2;
+
+            if (tSphere > 0.0 && tSphere < hit.t) {
+                hit.t        = tSphere;
+                hit.hitPoint = rayOrigin + tSphere * rayDir;
+                hit.normal   = normalize(hit.hitPoint - uSpheres[i].center);
                 hit.baseColor = uSpheres[i].color;
-                hit.type = uSpheres[i].type;
-                hit.rayOrigin = rayOrigin;
-                hit.rayDir = rayDir;
-                hit.inside = 0;
+                hit.type      = uSpheres[i].type;
+                hit.isPlane   = 0;
             }
         }
     }
@@ -135,11 +150,74 @@ HitInfo intersectScene(vec3 rayOrigin, vec3 rayDir) {
 
 /* calculates color based on hit data */
 vec3 calcColor(HitInfo hitInfo) {
-    if (hitInfo.t < 0.0) {
-        return vec3(0.0, 0.0, 0.0); // background color
-    } else {
-        return hitInfo.baseColor;
+    if (hitInfo.t > 1e19) {
+        return vec3(0.0); 
     }
+
+    vec3 V = normalize(cam.pos - hitInfo.hitPoint); // view direction
+    vec3 N = normalize(hitInfo.normal);
+
+    vec3 K_A = hitInfo.baseColor;
+    vec3 I_A = vec3(0.1, 0.2, 0.3); 
+    vec3 color = K_A * I_A;
+
+    vec3 K_S = vec3(0.7);
+
+    // Diffuse + specular
+    for (int i = 0; i < uNumLights; ++i) {
+        Light light = uLights[i];
+
+        vec3 L;          // direction from hit point to light
+        float cutoff = light.cutoff;
+
+        if (cutoff <= 0.0) {
+            // Directional light: direction field points FROM light, so invert
+            L = normalize(-light.direction);
+        } else {
+            // Spotlight
+            vec3 toLight = light.position - hitInfo.hitPoint;
+            float dist = length(toLight);
+            if (dist < 1e-6) {
+                continue;
+            }
+            L = toLight / dist;
+
+            float cosAngle = dot(-L, normalize(light.direction));
+            if (cosAngle < cutoff) {
+                continue;
+            }
+        }
+
+        // For planes, flip the normal toward the light if needed
+        if (hitInfo.isPlane == 1) {
+            if (dot(N, L) < 0.0) {
+                N = -N;
+            }
+        }
+
+        float NdotL = max(dot(N, L), 0.0);
+        if (NdotL == 0.0) {
+            continue;
+        }
+
+        // Diffuse: K_D * (N·L) * I
+        vec3 K_D = hitInfo.baseColor;
+        vec3 diffuse = K_D * NdotL * light.color;
+        color += diffuse;
+        
+        // Specular: K_S * (V·R)^n * I
+        // Calculate reflection vector: R = 2 * (N·L) * N - L
+        vec3 R = 2.0 * NdotL * N - L;
+        R = normalize(R);
+        float VdotR = dot(V, R);
+        if (VdotR > 0.0) {
+            float specPower = light.shininess;
+            vec3 specular = K_S * pow(VdotR, specPower) * light.color;
+            color += specular;
+        }
+    }
+
+    return clamp(color, 0.0, 1.0);
 }
 
 /* scales UV coordinates based on resolution
